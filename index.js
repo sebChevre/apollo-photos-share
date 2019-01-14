@@ -42,6 +42,9 @@ const resolvers = {
 			return newPhoto
 		}
 		
+	},
+	Photo: {
+		url: parent => `http://photos.seb/${parent.id}.jpg`
 	}
 }
 
