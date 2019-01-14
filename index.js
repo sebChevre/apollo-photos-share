@@ -14,22 +14,29 @@ var photos = [
         "id": "1",
         "nom": "Dropping the Heart Chute",
         "description": "The heart chute is one of my favorite chutes",
-        "category": "ACTION",
+        "categorie": "ACTION",
         "githubUser": "gPlake"
     },
     {
         "id": "2",
         "nom": "Enjoying the sunshine",
-        "category": "SELFIE",
+        "categorie": "SELFIE",
         "githubUser": "sSchmidt"
     },
     {
         id: "3",
         "nom": "Gunbarrel 25",
         "description": "25 laps on gunbarrel today",
-        "category": "LANDSCAPE",
+        "categorie": "LANDSCAPE",
         "githubUser": "sSchmidt"
     }
+]
+
+var tags = [
+    { "photoID": "1", "userID": "gPlake" },
+    { "photoID": "2", "userID": "sSchmidt" },
+    { "photoID": "2", "userID": "mHattrup" },
+    { "photoID": "2", "userID": "gPlake" }
 ]
 
 //définition des types
@@ -51,6 +58,7 @@ const typeDefs = `
 		description: String
 		categorie: PhotoCategorie!
 		postePar: Utilisateur!
+		utilisateursTagges: [Utilisateur!]!
 	}
 	
 	type Utilisateur {
@@ -58,6 +66,7 @@ const typeDefs = `
 	  nom: String
 	  avatar: String
 	  photosPostes: [Photo!]!
+	  dansPhotos: [Photo!]!
 	}
 	
 	enum PhotoCategorie {
@@ -97,12 +106,33 @@ const resolvers = {
 		url: parent => `http://photos.seb/${parent.id}.jpg`,
 			postePar: parent => {
             	return users.find(u => u.githubLogin === parent.githubUser)
-			}
+			},
+
+        utilisateursTagges: parent => tags
+
+        // Returns an array of tags that only contain the current photo
+            .filter(tag => tag.photoID === parent.id)
+
+            // Converts the array of tags into an array of userIDs
+            .map(tag => tag.userID)
+
+            // Converts array of userIDs into an array of user objects
+            .map(userID => users.find(u => u.githubLogin === userID))
 	},
 	Utilisateur: {
 		photosPostes: parent => {
 			return photos.filter(p => p.githubUser === parent.githubLogin)
-		}
+		},
+        dansPhotos: parent => tags
+
+        // Returns an array of tags that only contain the current user
+            .filter(tag => tag.userID === parent.id)
+
+            // Converts the array of tags into an array of photoIDs
+            .map(tag => tag.photoID)
+
+            // Converts array of photoIDs into an array of photo objects
+            .map(photoID => photos.find(p => p.id === photoID))
 	}
 
 }
