@@ -3,7 +3,34 @@ const {ApolloServer} = require('apollo-server')
 
 //in memroy datas
 var _photoId = 0
-var photos = []
+var users = [
+    { "githubLogin": "mHattrup", "nom": "Mike Hattrup" },
+    { "githubLogin": "gPlake", "nom": "Glen Plake" },
+    { "githubLogin": "sSchmidt", "nom": "Scot Schmidt" }
+]
+
+var photos = [
+    {
+        "id": "1",
+        "nom": "Dropping the Heart Chute",
+        "description": "The heart chute is one of my favorite chutes",
+        "category": "ACTION",
+        "githubUser": "gPlake"
+    },
+    {
+        "id": "2",
+        "nom": "Enjoying the sunshine",
+        "category": "SELFIE",
+        "githubUser": "sSchmidt"
+    },
+    {
+        id: "3",
+        "nom": "Gunbarrel 25",
+        "description": "25 laps on gunbarrel today",
+        "category": "LANDSCAPE",
+        "githubUser": "sSchmidt"
+    }
+]
 
 //définition des types
 const typeDefs = `
@@ -23,6 +50,14 @@ const typeDefs = `
 		nom: String!
 		description: String
 		categorie: PhotoCategorie!
+		postePar: Utilisateur!
+	}
+	
+	type Utilisateur {
+	  githubLogin: ID!
+	  nom: String
+	  avatar: String
+	  photosPostes: [Photo!]!
 	}
 	
 	enum PhotoCategorie {
@@ -59,8 +94,17 @@ const resolvers = {
 		
 	},
 	Photo: {
-		url: parent => `http://photos.seb/${parent.id}.jpg`
+		url: parent => `http://photos.seb/${parent.id}.jpg`,
+			postePar: parent => {
+            	return users.find(u => u.githubLogin === parent.githubUser)
+			}
+	},
+	Utilisateur: {
+		photosPostes: parent => {
+			return photos.filter(p => p.githubUser === parent.githubLogin)
+		}
 	}
+
 }
 
 //création du serveur et config type et reolvers
