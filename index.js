@@ -1,5 +1,6 @@
 //requiert appolo-server
 const {ApolloServer} = require('apollo-server')
+const { GraphQLScalarType } = require('graphql')
 
 //in memroy datas
 var _photoId = 0
@@ -15,20 +16,23 @@ var photos = [
         "nom": "Dropping the Heart Chute",
         "description": "The heart chute is one of my favorite chutes",
         "categorie": "ACTION",
-        "githubUser": "gPlake"
+        "githubUser": "gPlake",
+        "cree": "3-28-1977"
     },
     {
         "id": "2",
         "nom": "Enjoying the sunshine",
         "categorie": "SELFIE",
-        "githubUser": "sSchmidt"
+        "githubUser": "sSchmidt",
+        "cree": "1-2-1985"
     },
     {
         id: "3",
         "nom": "Gunbarrel 25",
         "description": "25 laps on gunbarrel today",
         "categorie": "LANDSCAPE",
-        "githubUser": "sSchmidt"
+        "githubUser": "sSchmidt",
+        "cree": "2018-04-15T19:09:57.308Z"
     }
 ]
 
@@ -41,10 +45,12 @@ var tags = [
 
 //définition des types
 const typeDefs = `
+	scalar DateTime
 	
 	type Query {
 		totalPhotos: Int!
 		allPhotos: [Photo!]!
+		allPhotosApres(after: DateTime): [Photo!]!
 	}
 
 	type Mutation {
@@ -59,6 +65,7 @@ const typeDefs = `
 		categorie: PhotoCategorie!
 		postePar: Utilisateur!
 		utilisateursTagges: [Utilisateur!]!
+		cree: DateTime
 	}
 	
 	type Utilisateur {
@@ -87,15 +94,22 @@ const typeDefs = `
 //définition des resolvers
 const resolvers = {
 	Query: {
-	    totalPhotos: () => photos.length,
-		allPhotos: () => photos
-	},
+        totalPhotos: () => photos.length,
+        allPhotos: () => photos,
+        allPhotosApres: (parent, args) => {
+           console.log( args.after )
+            return photos.filter(photo => {
+            	return photo.cree > args.after;
+            })
+        }
+    },
 	Mutation: {
 		postPhoto(parent, args){
 
 			var newPhoto = {
 				id: ++_photoId,
-				...args.input
+				...args.input,
+				cree: new Date()
 			}
 			photos.push(newPhoto)
 			return newPhoto
@@ -133,7 +147,14 @@ const resolvers = {
 
             // Converts array of photoIDs into an array of photo objects
             .map(photoID => photos.find(p => p.id === photoID))
-	}
+	},
+    DateTime: new GraphQLScalarType({
+        name: 'DateTime',
+        description: 'A valid date time value.',
+        parseValue: value => new Date(value),
+        serialize: value => new Date(value).toISOString(),
+        parseLiteral: ast => ast.value
+    })
 
 }
 
